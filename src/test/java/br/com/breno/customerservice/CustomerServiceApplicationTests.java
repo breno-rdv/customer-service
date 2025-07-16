@@ -1,4 +1,4 @@
-package br.com.breno.customer_service;
+package br.com.breno.customerservice;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

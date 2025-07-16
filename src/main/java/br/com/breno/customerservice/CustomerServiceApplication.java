@@ -1,4 +1,4 @@
-package br.com.breno.customer_service;
+package br.com.breno.customerservice;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
