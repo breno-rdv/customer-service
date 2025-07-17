@@ -1,0 +1,510 @@
+openapi: 3.0.3
+info:
+  title: Customer Service API
+  description: |-
+    API for managing customer profiles, preferences, communication history, and marketing segments.
+    - Stores customer profiles and preferences
+    - Manages communication history
+    - Implements privacy and data retention policies
+    - Provides customer segmentation for marketing
+    - Handles consent and communication preferences
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Development server
+paths:
+  /customers:
+    get:
+      tags:
+        - Customer
+      summary: List all customers
+      description: Retrieve a paginated list of customers with optional filtering.
+      operationId: listCustomers
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of customers to return
+          schema:
+            type: integer
+            format: int32
+            default: 20
+        - name: offset
+          in: query
+          description: Number of customers to skip for pagination
+          schema:
+            type: integer
+            format: int32
+            default: 0
+      responses:
+        '200':
+          description: A list of customers.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Customer'
+    post:
+      tags:
+        - Customer
+      summary: Create a new customer
+      description: Adds a new customer profile to the system.
+      operationId: createCustomer
+      requestBody:
+        description: Customer object that needs to be added.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewCustomer'
+      responses:
+        '201':
+          description: Customer created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '400':
+          description: Invalid input provided.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /customers/{customerId}:
+    get:
+      tags:
+        - Customer
+      summary: Get customer by ID
+      description: Retrieve a single customer's profile and preferences by their unique ID.
+      operationId: getCustomerById
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '404':
+          description: Customer not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      tags:
+        - Customer
+      summary: Update an existing customer
+      description: Fully updates a customer's profile. All fields are required.
+      operationId: updateCustomer
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+      requestBody:
+        description: Customer object with updated information.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewCustomer'
+      responses:
+        '200':
+          description: Customer updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '400':
+          description: Invalid input provided.
+        '404':
+          description: Customer not found.
+    patch:
+      tags:
+        - Customer
+      summary: Partially update a customer
+      description: Partially updates a customer's profile. Only include the fields to be updated.
+      operationId: patchCustomer
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+      requestBody:
+        description: Customer object with fields to update.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewCustomer'
+      responses:
+        '200':
+          description: Customer updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '400':
+          description: Invalid input provided.
+        '404':
+          description: Customer not found.
+    delete:
+      tags:
+        - Customer
+      summary: Delete a customer
+      description: Deletes a customer's profile according to data retention policies.
+      operationId: deleteCustomer
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+      responses:
+        '204':
+          description: Customer deleted successfully.
+        '404':
+          description: Customer not found.
+
+  /customers/{customerId}/communications:
+    get:
+      tags:
+        - Communication
+      summary: Get communication history
+      description: Retrieve the communication history for a specific customer.
+      operationId: getCommunicationHistory
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+      responses:
+        '200':
+          description: A list of communication events.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Communication'
+        '404':
+          description: Customer not found.
+    post:
+      tags:
+        - Communication
+      summary: Log a communication event
+      description: Adds a new communication event to a customer's history.
+      operationId: logCommunication
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+      requestBody:
+        description: The communication event to log.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewCommunication'
+      responses:
+        '201':
+          description: Communication logged successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Communication'
+        '404':
+          description: Customer not found.
+
+  /customers/{customerId}/consent:
+    get:
+      tags:
+        - Consent
+      summary: Get consent preferences
+      description: Get the current consent status for a customer.
+      operationId: getConsent
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+      responses:
+        '200':
+          description: Consent preferences retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Consent'
+        '404':
+          description: Customer not found.
+    put:
+      tags:
+        - Consent
+      summary: Update consent preferences
+      description: Update a customer's consent settings for various communication channels.
+      operationId: updateConsent
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+      requestBody:
+        description: The updated consent settings.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Consent'
+      responses:
+        '200':
+          description: Consent updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Consent'
+        '404':
+          description: Customer not found.
+
+  /segments:
+    get:
+      tags:
+        - Segmentation
+      summary: List all segments
+      description: Retrieve a list of all available customer segments.
+      operationId: listSegments
+      responses:
+        '200':
+          description: A list of segments.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Segment'
+    post:
+      tags:
+        - Segmentation
+      summary: Create a new segment
+      description: Create a new customer segment based on a set of criteria.
+      operationId: createSegment
+      requestBody:
+        description: The segment to create.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewSegment'
+      responses:
+        '201':
+          description: Segment created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Segment'
+
+  /segments/{segmentId}:
+    get:
+      tags:
+        - Segmentation
+      summary: Get segment details
+      description: Retrieve the details of a specific customer segment.
+      operationId: getSegmentById
+      parameters:
+        - $ref: '#/components/parameters/SegmentId'
+      responses:
+        '200':
+          description: Segment details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Segment'
+        '404':
+          description: Segment not found.
+    delete:
+      tags:
+        - Segmentation
+      summary: Delete a segment
+      description: Deletes a customer segment.
+      operationId: deleteSegment
+      parameters:
+        - $ref: '#/components/parameters/SegmentId'
+      responses:
+        '204':
+          description: Segment deleted successfully.
+        '404':
+          description: Segment not found.
+
+  /segments/{segmentId}/customers:
+    get:
+      tags:
+        - Segmentation
+      summary: Get customers in a segment
+      description: Get a list of all customers belonging to a specific segment.
+      operationId: getSegmentCustomers
+      parameters:
+        - $ref: '#/components/parameters/SegmentId'
+      responses:
+        '200':
+          description: A list of customers in the segment.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Customer'
+        '404':
+          description: Segment not found.
+
+components:
+  parameters:
+    CustomerId:
+      name: customerId
+      in: path
+      required: true
+      description: The unique identifier of the customer.
+      schema:
+        type: string
+        format: uuid
+    SegmentId:
+      name: segmentId
+      in: path
+      required: true
+      description: The unique identifier of the segment.
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    Customer:
+      type: object
+      properties:
+        customerId:
+          type: string
+          format: uuid
+          description: Unique identifier for the customer.
+          readOnly: true
+        firstName:
+          type: string
+          example: "John"
+        lastName:
+          type: string
+          example: "Doe"
+        email:
+          type: string
+          format: email
+          example: "john.doe@example.com"
+        phone:
+          type: string
+          example: "+15551234567"
+        preferences:
+          $ref: '#/components/schemas/CustomerPreferences'
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+    NewCustomer:
+      type: object
+      required:
+        - firstName
+        - lastName
+        - email
+      properties:
+        firstName:
+          type: string
+          example: "Jane"
+        lastName:
+          type: string
+          example: "Doe"
+        email:
+          type: string
+          format: email
+          example: "jane.doe@example.com"
+        phone:
+          type: string
+          example: "+15557654321"
+        preferences:
+          $ref: '#/components/schemas/CustomerPreferences'
+
+    CustomerPreferences:
+      type: object
+      properties:
+        newsletterSubscription:
+          type: boolean
+          default: false
+        preferredContactMethod:
+          type: string
+          enum: [email, sms, phone]
+          default: email
+
+    Communication:
+      type: object
+      properties:
+        communicationId:
+          type: string
+          format: uuid
+          readOnly: true
+        timestamp:
+          type: string
+          format: date-time
+          readOnly: true
+        channel:
+          type: string
+          enum: [email, sms, phone, web]
+        summary:
+          type: string
+          description: A brief summary of the communication.
+          example: "Sent welcome email."
+    NewCommunication:
+      type: object
+      required:
+        - channel
+        - summary
+      properties:
+        channel:
+          type: string
+          enum: [email, sms, phone, web]
+        summary:
+          type: string
+          description: A brief summary of the communication.
+          example: "Customer called for support."
+
+    Consent:
+      type: object
+      properties:
+        emailMarketing:
+          type: boolean
+          description: "Consent for receiving marketing emails."
+          default: false
+        smsNotifications:
+          type: boolean
+          description: "Consent for receiving SMS notifications."
+          default: false
+
+    Segment:
+      type: object
+      properties:
+        segmentId:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          example: "High Value Customers"
+        description:
+          type: string
+          example: "Customers with more than 5 purchases in the last year."
+        criteria:
+          type: object
+          description: "The rules that define the segment."
+          example:
+            type: "purchase_history"
+            min_purchases: 5
+            days: 365
+    NewSegment:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          example: "New Subscribers"
+        description:
+          type: string
+          example: "Users who subscribed in the last 30 days."
+        criteria:
+          type: object
+          description: "The rules that define the segment."
+          example:
+            type: "subscription_date"
+            days: 30
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
