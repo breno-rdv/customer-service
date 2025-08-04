@@ -9,5 +9,5 @@ Customer Service
 - Handles consent and communication preferences
 
 ## Todos
-- create docker image
+- set up dynamo local
 - docker compose with dynamodb
